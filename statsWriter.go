@@ -50,7 +50,7 @@ func NewStatsWriter(filename string) (*StatsWriter, error) {
 
 func (s *StatsWriter) RootHandler(w http.ResponseWriter, r *http.Request) {
 
-	log.Println("root handler", s.ID)
+	// log.Println("root handler", s.ID)
 	var in Stat
 	err := ReadJSON(w, r, &in)
 	if err != nil {

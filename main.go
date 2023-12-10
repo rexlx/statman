@@ -1,19 +1,5 @@
 package main
 
-/*
-
-88                                   88
-88                                   ""
-88
-88 ,adPPYYba, 8b,dPPYba,   ,adPPYba, 88 88       88 88,dPYba,,adPYba,
-88 ""     `Y8 88P'   `"8a a8"     "" 88 88       88 88P'   "88"    "8a
-88 ,adPPPPP88 88       88 8b         88 88       88 88      88      88
-88 88,    ,88 88       88 "8a,   ,aa 88 "8a,   ,a88 88      88      88
-88 `"8bbdP"Y8 88       88  `"Ybbd8"' 88  `"YbbdP'Y8 88      88      88
-_______________________________________________________________________
-This is the main entry point of the app.
-*/
-
 import (
 	"flag"
 	"fmt"
@@ -21,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"sync"
+	"time"
 )
 
 var (
@@ -28,11 +15,13 @@ var (
 )
 
 type MainServer struct {
-	Logger  *log.Logger
-	Port    int
-	Server  *http.Server
-	Mux     *sync.RWMutex
-	Writers map[string]*StatsWriter
+	Logger    *log.Logger
+	Port      int
+	StartTime time.Time
+	Visits    int
+	Server    *http.Server
+	Mux       *sync.RWMutex
+	Writers   map[string]*StatsWriter
 }
 
 func main() {
@@ -49,5 +38,14 @@ func main() {
 	}
 	app.Writers = make(map[string]*StatsWriter)
 	app.Logger.Printf("Starting server on port %d\n", app.Port)
+	app.StartTime = time.Now()
+	go func() {
+		for range time.Tick(5 * time.Second) {
+			app.Logger.Printf("got %v visits in the last 5 seconds\r", app.Visits)
+			app.Mux.Lock()
+			app.Visits = 0
+			app.Mux.Unlock()
+		}
+	}()
 	app.Logger.Fatal(app.Server.ListenAndServe())
 }

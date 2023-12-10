@@ -38,9 +38,10 @@ func (m *MainServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid path", http.StatusBadRequest)
 		return
 	}
-	m.Mux.RLock()
+	m.Mux.Lock()
 	svr, ok := m.Writers[bits[0]]
-	m.Mux.RUnlock()
+	m.Visits++
+	m.Mux.Unlock()
 	if !ok {
 		m.Logger.Println("creating new stats writer", bits[0])
 		svr, err := NewStatsWriter(fmt.Sprintf("%s.log", bits[0]))
@@ -57,7 +58,7 @@ func (m *MainServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	} else {
 		svr.RootHandler(w, r)
 	}
-	m.Logger.Printf("served request (%v) for %v", path, r.RemoteAddr)
+	// m.Logger.Printf("served request (%v) for %v", path, r.RemoteAddr)
 }
 
 func (s *StatsWriter) AppendStats(stat Stat) {
