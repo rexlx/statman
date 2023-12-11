@@ -41,10 +41,12 @@ func main() {
 	app.StartTime = time.Now()
 	go func() {
 		for range time.Tick(5 * time.Second) {
-			app.Logger.Printf("got %v visits in the last 5 seconds\r", app.Visits)
-			app.Mux.Lock()
-			app.Visits = 0
-			app.Mux.Unlock()
+			if app.Visits > 0 {
+				app.Mux.Lock()
+				app.Logger.Printf("got %v visits in the last 5 seconds\r", app.Visits)
+				app.Visits = 0
+				app.Mux.Unlock()
+			}
 		}
 	}()
 	app.Logger.Fatal(app.Server.ListenAndServe())

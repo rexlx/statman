@@ -16,6 +16,7 @@ var (
 	host     = flag.String("url", "cobra.nullferatu.com", "URL to send the request to")
 	port     = flag.Int("port", 20080, "Port to send the request to")
 	filename = flag.String("filename", "mojo", "Filename to save the stats to")
+	count    = flag.Int("count", 20, "amount of requests to send")
 )
 
 type App struct {
@@ -119,5 +120,5 @@ func main() {
 			FileName: *filename,
 		},
 	}
-	app.Jiggle(100)
+	app.Jiggle(*count)
 }
