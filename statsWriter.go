@@ -24,7 +24,7 @@ type StatsWriter struct {
 }
 
 type Stat struct {
-	Value float64   `json:"value"`
+	Value []float64 `json:"value"`
 	Time  time.Time `json:"time"`
 	ID    string    `json:"id"`
 }
