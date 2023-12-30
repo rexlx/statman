@@ -92,14 +92,14 @@ func (a *App) Jiggle(n int) {
 				a.PostStatHTTP(
 					client.Stat{
 						ID:    "true",
-						Value: float64(z),
+						Value: []float64{float64(z)},
 						Time:  time.Now(),
 					})
 			} else {
 				a.PostStatHTTP(
 					client.Stat{
 						ID:    "false",
-						Value: float64(z),
+						Value: []float64{float64(z)},
 						Time:  time.Now(),
 					})
 			}
