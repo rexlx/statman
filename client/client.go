@@ -16,9 +16,10 @@ type StatsEndPoint struct {
 }
 
 type Stat struct {
-	Value []float64 `json:"value"`
-	Time  time.Time `json:"time"`
-	ID    string    `json:"id"`
+	Value []float64     `json:"value"`
+	Time  time.Time     `json:"time"`
+	ID    string        `json:"id"`
+	Extra []interface{} `json:"extra"`
 }
 
 func NewStatsEndPoint(host, filename string, port int) *StatsEndPoint {

@@ -80,9 +80,10 @@ func Work() (int, bool) {
 
 func (a *App) Jiggle(n int) {
 	var wg sync.WaitGroup
+	start := time.Now()
 	defer func(t time.Time) {
 		fmt.Println("Jiggle took: ", time.Since(t))
-	}(time.Now())
+	}(start)
 	for i := 0; i < n; i++ {
 		wg.Add(1)
 		go func(n int, wg *sync.WaitGroup) {
