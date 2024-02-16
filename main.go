@@ -11,7 +11,8 @@ import (
 )
 
 var (
-	port = flag.Int("port", 20080, "port to listen on")
+	port     = flag.Int("port", 20080, "port to listen on")
+	noDocker = flag.Bool("no-docker", false, "are we running in a container")
 )
 
 type MainServer struct {

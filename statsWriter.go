@@ -30,8 +30,14 @@ type Stat struct {
 	Extra []interface{} `json:"extra"`
 }
 
-func NewStatsWriter(filename string) (*StatsWriter, error) {
-	fh, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+func NewStatsWriter(noDocker bool, filename string) (*StatsWriter, error) {
+	var fname string
+	if noDocker {
+		fname = filename
+	} else {
+		fname = fmt.Sprintf("/logs/%v", filename)
+	}
+	fh, err := os.OpenFile(fname, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return nil, err
 	}
