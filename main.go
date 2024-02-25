@@ -19,7 +19,7 @@ var (
 	port          = flag.Int("port", 20080, "port to listen on")
 	noDocker      = flag.Bool("no-docker", false, "are we running in a container")
 	firestoreMode = flag.Bool("firestore", true, "use firestore")
-	projectId     = flag.String("project", "plated-dryad-148318", "project id")
+	projectId     = flag.String("project", "tubular-monkey-514321", "project id")
 )
 
 type MainServer struct {
@@ -46,7 +46,7 @@ func main() {
 	flag.Parse()
 	if *firestoreMode {
 		ctx := context.Background()
-		sa := option.WithCredentialsFile("/fbase.json")
+		sa := option.WithCredentialsFile("fbase.json")
 		cfg := &firebase.Config{ProjectID: *projectId}
 		fb, err := firebase.NewApp(ctx, cfg, sa)
 		if err != nil {
