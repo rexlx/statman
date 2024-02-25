@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -8,19 +9,25 @@ import (
 	"os"
 	"sync"
 	"time"
+
+	firebase "firebase.google.com/go"
+
+	"cloud.google.com/go/firestore"
+	"google.golang.org/api/option"
 )
 
 type StatsWriter struct {
-	StartTime    time.Time      `json:"startTime"`
-	RequestCount int            `json:"requestCount"`
-	Server       *http.ServeMux `json:"-"`
-	Logger       *log.Logger    `json:"-"`
-	Filename     string         `json:"filename"`
-	Size         int            `json:"size"`
-	BytesWritten int            `json:"bytes"`
-	ID           string         `json:"id"`
-	Stats        []Stat         `json:"stats"`
-	Mux          *sync.RWMutex  `json:"-"`
+	StartTime    time.Time         `json:"startTime"`
+	RequestCount int               `json:"requestCount"`
+	Server       *http.ServeMux    `json:"-"`
+	Logger       *log.Logger       `json:"-"`
+	FSClient     *firestore.Client `json:"-"`
+	Filename     string            `json:"filename"`
+	Size         int               `json:"size"`
+	BytesWritten int               `json:"bytes"`
+	ID           string            `json:"id"`
+	Stats        []Stat            `json:"stats"`
+	Mux          *sync.RWMutex     `json:"-"`
 }
 
 type Stat struct {
@@ -30,12 +37,28 @@ type Stat struct {
 	Extra []interface{} `json:"extra"`
 }
 
-func NewStatsWriter(noDocker bool, filename string) (*StatsWriter, error) {
+func NewStatsWriter(noDocker bool, filename string, firestoreMode bool) (*StatsWriter, error) {
 	var fname string
+	var client *firestore.Client
 	if noDocker {
 		fname = filename
 	} else {
 		fname = fmt.Sprintf("/logs/%v", filename)
+	}
+	if firestoreMode {
+		ctx := context.Background()
+		sa := option.WithCredentialsFile("/service-account.json") // Path to service account key
+		app, err := firebase.NewApp(ctx, nil, sa)
+		if err != nil {
+			// Handle error
+		}
+
+		client, err := app.Firestore(ctx)
+		if err != nil {
+			// Handle error
+		}
+		defer client.Close()
+
 	}
 	fh, err := os.OpenFile(fname, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -51,6 +74,7 @@ func NewStatsWriter(noDocker bool, filename string) (*StatsWriter, error) {
 		Mux:       lock,
 		Stats:     stats,
 		Filename:  filename,
+		FSClient:  client,
 		ID:        RandomUUID(),
 	}, nil
 }
@@ -71,7 +95,19 @@ func (s *StatsWriter) RootHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	s.Logger.Println(string(out))
+	if s.FSClient != nil {
+		_, _, err := s.FSClient.Collection(s.Filename).Add(context.Background(), in)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		s.Logger.Println(string(out))
+	}
 	s.RequestCount++
 	fmt.Fprintf(w, "OK\n")
+}
+
+func (s *StatsWriter) SaveToFireStore(ctx context.Context, database string) error {
+	return nil
 }

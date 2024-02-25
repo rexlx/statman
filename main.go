@@ -11,11 +11,13 @@ import (
 )
 
 var (
-	port     = flag.Int("port", 20080, "port to listen on")
-	noDocker = flag.Bool("no-docker", false, "are we running in a container")
+	port          = flag.Int("port", 20080, "port to listen on")
+	noDocker      = flag.Bool("no-docker", false, "are we running in a container")
+	firestoreMode = flag.Bool("firestore", false, "use firestore")
 )
 
 type MainServer struct {
+	Modes
 	Logger    *log.Logger
 	Port      int
 	StartTime time.Time
@@ -25,6 +27,11 @@ type MainServer struct {
 	Writers   map[string]*StatsWriter
 }
 
+type Modes struct {
+	NoDocker      bool
+	FirestoreMode bool
+}
+
 func main() {
 	mx := &sync.RWMutex{}
 	flag.Parse()
@@ -32,6 +39,10 @@ func main() {
 		Logger: log.New(os.Stdout, "main_server _ ", log.LstdFlags),
 		Port:   *port,
 		Mux:    mx,
+		Modes: Modes{
+			NoDocker:      *noDocker,
+			FirestoreMode: *firestoreMode,
+		},
 	}
 	app.Server = &http.Server{
 		Addr:    fmt.Sprintf(":%d", app.Port),
