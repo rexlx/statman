@@ -13,7 +13,7 @@ import (
 var (
 	port          = flag.Int("port", 20080, "port to listen on")
 	noDocker      = flag.Bool("no-docker", false, "are we running in a container")
-	firestoreMode = flag.Bool("firestore", false, "use firestore")
+	firestoreMode = flag.Bool("firestore", true, "use firestore")
 )
 
 type MainServer struct {
