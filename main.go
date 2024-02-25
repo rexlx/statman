@@ -46,7 +46,7 @@ func main() {
 	flag.Parse()
 	if *firestoreMode {
 		ctx := context.Background()
-		sa := option.WithCredentialsFile("fbase.json")
+		sa := option.WithCredentialsFile("/fbase.json")
 		cfg := &firebase.Config{ProjectID: *projectId}
 		fb, err := firebase.NewApp(ctx, cfg, sa)
 		if err != nil {
