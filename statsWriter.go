@@ -50,12 +50,12 @@ func NewStatsWriter(noDocker bool, filename string, firestoreMode bool) (*StatsW
 		sa := option.WithCredentialsFile("/fbase.json") // Path to service account key
 		app, err := firebase.NewApp(ctx, nil, sa)
 		if err != nil {
-			// Handle error
+			return nil, err
 		}
 
 		client, err := app.Firestore(ctx)
 		if err != nil {
-			// Handle error
+			return nil, err
 		}
 		defer client.Close()
 
@@ -96,6 +96,7 @@ func (s *StatsWriter) RootHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if s.FSClient != nil {
+		fmt.Println("writing to firestore")
 		_, _, err := s.FSClient.Collection(s.Filename).Add(context.Background(), in)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
