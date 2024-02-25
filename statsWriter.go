@@ -47,7 +47,7 @@ func NewStatsWriter(noDocker bool, filename string, firestoreMode bool) (*StatsW
 	}
 	if firestoreMode {
 		ctx := context.Background()
-		sa := option.WithCredentialsFile("/service-account.json") // Path to service account key
+		sa := option.WithCredentialsFile("/fbase.json") // Path to service account key
 		app, err := firebase.NewApp(ctx, nil, sa)
 		if err != nil {
 			// Handle error
