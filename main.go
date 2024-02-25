@@ -45,16 +45,17 @@ func main() {
 	if *firestoreMode {
 		ctx := context.Background()
 		sa := option.WithCredentialsFile("/fbase.json") // Path to service account key
-		app, err := firebase.NewApp(ctx, nil, sa)
+		fb, err := firebase.NewApp(ctx, nil, sa)
 		if err != nil {
 			panic(err)
 		}
 
-		client, err := app.Firestore(ctx)
+		client, err := fb.Firestore(ctx)
 		if err != nil {
 			panic(err)
 		}
 		defer client.Close()
+		fmt.Println("Firestore connected")
 
 	}
 	app := &MainServer{
