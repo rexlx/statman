@@ -42,21 +42,23 @@ type Modes struct {
 func main() {
 	mx := &sync.RWMutex{}
 	client := &firestore.Client{}
+	defer client.Close()
 	flag.Parse()
 	if *firestoreMode {
 		ctx := context.Background()
-		sa := option.WithCredentialsFile("/fbase.json")
+		sa := option.WithCredentialsFile("fbase.json")
 		cfg := &firebase.Config{ProjectID: *projectId}
 		fb, err := firebase.NewApp(ctx, cfg, sa)
 		if err != nil {
-			panic(err)
+			fmt.Println("error initializing app:", err)
+			os.Exit(1)
 		}
 
-		client, err := fb.Firestore(ctx)
+		client, err = fb.Firestore(ctx)
 		if err != nil {
-			panic(err)
+			fmt.Println("error getting Firestore client:", err)
+			os.Exit(1)
 		}
-		defer client.Close()
 		fmt.Println("Firestore connected")
 
 	}
