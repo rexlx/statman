@@ -19,6 +19,7 @@ var (
 	port          = flag.Int("port", 20080, "port to listen on")
 	noDocker      = flag.Bool("no-docker", false, "are we running in a container")
 	firestoreMode = flag.Bool("firestore", true, "use firestore")
+	projectId     = flag.String("project", "plated-dryad-148318", "project id")
 )
 
 type MainServer struct {
@@ -44,8 +45,9 @@ func main() {
 	flag.Parse()
 	if *firestoreMode {
 		ctx := context.Background()
-		sa := option.WithCredentialsFile("/fbase.json") // Path to service account key
-		fb, err := firebase.NewApp(ctx, nil, sa)
+		sa := option.WithCredentialsFile("/fbase.json")
+		cfg := &firebase.Config{ProjectID: *projectId}
+		fb, err := firebase.NewApp(ctx, cfg, sa)
 		if err != nil {
 			panic(err)
 		}
