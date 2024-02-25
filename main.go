@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -8,6 +9,10 @@ import (
 	"os"
 	"sync"
 	"time"
+
+	"cloud.google.com/go/firestore"
+	firebase "firebase.google.com/go"
+	"google.golang.org/api/option"
 )
 
 var (
@@ -18,6 +23,7 @@ var (
 
 type MainServer struct {
 	Modes
+	FSClient  *firestore.Client
 	Logger    *log.Logger
 	Port      int
 	StartTime time.Time
@@ -34,11 +40,28 @@ type Modes struct {
 
 func main() {
 	mx := &sync.RWMutex{}
+	client := &firestore.Client{}
 	flag.Parse()
+	if *firestoreMode {
+		ctx := context.Background()
+		sa := option.WithCredentialsFile("/fbase.json") // Path to service account key
+		app, err := firebase.NewApp(ctx, nil, sa)
+		if err != nil {
+			panic(err)
+		}
+
+		client, err := app.Firestore(ctx)
+		if err != nil {
+			panic(err)
+		}
+		defer client.Close()
+
+	}
 	app := &MainServer{
-		Logger: log.New(os.Stdout, "main_server _ ", log.LstdFlags),
-		Port:   *port,
-		Mux:    mx,
+		FSClient: client,
+		Logger:   log.New(os.Stdout, "main_server _ ", log.LstdFlags),
+		Port:     *port,
+		Mux:      mx,
 		Modes: Modes{
 			NoDocker:      *noDocker,
 			FirestoreMode: *firestoreMode,

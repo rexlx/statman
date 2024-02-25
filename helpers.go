@@ -43,7 +43,7 @@ func (m *MainServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	m.Visits++
 	if !ok {
 		m.Logger.Println("creating new stats writer", bits[0])
-		svr, err := NewStatsWriter(m.NoDocker, fmt.Sprintf("%s.log", bits[0]), m.FirestoreMode)
+		svr, err := NewStatsWriter(m.NoDocker, fmt.Sprintf("%s.log", bits[0]), m.FSClient)
 		if err != nil {
 			m.Logger.Println(err, "error creating stats writer")
 			http.Error(w, "error creating stats writer", http.StatusInternalServerError)

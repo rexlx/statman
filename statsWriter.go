@@ -10,10 +10,7 @@ import (
 	"sync"
 	"time"
 
-	firebase "firebase.google.com/go"
-
 	"cloud.google.com/go/firestore"
-	"google.golang.org/api/option"
 )
 
 type StatsWriter struct {
@@ -37,29 +34,14 @@ type Stat struct {
 	Extra []interface{} `json:"extra"`
 }
 
-func NewStatsWriter(noDocker bool, filename string, firestoreMode bool) (*StatsWriter, error) {
+func NewStatsWriter(noDocker bool, filename string, client *firestore.Client) (*StatsWriter, error) {
 	var fname string
-	var client *firestore.Client
 	if noDocker {
 		fname = filename
 	} else {
 		fname = fmt.Sprintf("/logs/%v", filename)
 	}
-	if firestoreMode {
-		ctx := context.Background()
-		sa := option.WithCredentialsFile("/fbase.json") // Path to service account key
-		app, err := firebase.NewApp(ctx, nil, sa)
-		if err != nil {
-			return nil, err
-		}
 
-		client, err := app.Firestore(ctx)
-		if err != nil {
-			return nil, err
-		}
-		defer client.Close()
-
-	}
 	fh, err := os.OpenFile(fname, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return nil, err
