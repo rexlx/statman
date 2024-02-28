@@ -20,7 +20,6 @@ RUN apk --no-cache add ca-certificates curl bash python3 which
 
 COPY --from=builder /app/statman /app/statman
 RUN curl -sSL https://sdk.cloud.google.com | bash
-RUN curl -H "Authorization: Bearer $(gcloud auth print-identity-token)" https://blueweddingdress-bgqszuo3za-uc.a.run.app > /fbase.json
 RUN mkdir /logs
 # RUN chown -R statman:statman /logs
 
