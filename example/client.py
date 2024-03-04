@@ -17,15 +17,13 @@ def get_data(i, url):
         "extra": []
     }
 
-    # perform the GET request
-    response = requests.get(url)
+     # this is the time in ISO 8601 format + Z
+    t = dt.now().strftime("%Y-%m-%dT%H:%M:%S")
+    t += "Z"
 
     # try to parse the response and fill the dictionary
     try:
-        # this is the time in ISO 8601 format + Z
-        t = dt.now().strftime("%Y-%m-%dT%H:%M:%S")
-        t += "Z"
-        
+        response = requests.get(url)
         data = response.json()
 
         # i happen to know in this case that the response is a dictionary with a key 'data'
