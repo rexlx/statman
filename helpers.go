@@ -60,11 +60,11 @@ func (m *MainServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// m.Logger.Printf("served request (%v) for %v", path, r.RemoteAddr)
 }
 
-func (s *StatsWriter) AppendStats(stat Stat) {
+func (s *StatsWriter) AppendStats(stat ...Stat) {
 	// only append the list if the lock is acquired
 	s.Mux.Lock()
 	defer s.Mux.Unlock()
-	s.Stats = append(s.Stats, stat)
+	s.Stats = append(s.Stats, stat...)
 }
 
 func (s *StatsWriter) WriteStatsToLogger() {

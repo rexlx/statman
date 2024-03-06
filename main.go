@@ -12,15 +12,16 @@ import (
 
 	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
-	"google.golang.org/api/option"
 )
 
 var (
-	port          = flag.Int("port", 20080, "port to listen on")
-	noDocker      = flag.Bool("no-docker", false, "are we running in a container")
-	firestoreMode = flag.Bool("firestore", false, "use firestore")
-	projectId     = flag.String("project", "tubular-monkey-514321", "project id")
-	inMemoryMode  = flag.Bool("in-memory", false, "use in-memory storage")
+	port                     = flag.Int("port", 20080, "port to listen on")
+	noDocker                 = flag.Bool("no-docker", false, "are we running in a container")
+	firestoreMode            = flag.Bool("firestore", false, "use firestore")
+	inMemoryMode             = flag.Bool("in-memory", false, "use in-memory storage")
+	projectId                = flag.String("project", "tubular-monkey-514321", "project id")
+	bucket                   = flag.String("bucket", "nullferatu", "bucket name")
+	MemoryModeWriteFrequency = flag.Int("write-frequency", 5, "how often to write to memory")
 )
 
 type MainServer struct {
@@ -50,10 +51,10 @@ func main() {
 
 	if *firestoreMode {
 		ctx := context.Background()
-		cfg := &firebase.Config{ProjectID: *projectId}
-		sa := option.WithCredentialsFile("/Users/rxlx/bin/data/fbase.json")
-		fb, err := firebase.NewApp(ctx, cfg, sa)
-		// fb, err := firebase.NewApp(ctx, nil)
+		// cfg := &firebase.Config{ProjectID: *projectId}
+		// sa := option.WithCredentialsFile("/Users/rxlx/bin/data/fbase.json")
+		// fb, err := firebase.NewApp(ctx, cfg, sa)
+		fb, err := firebase.NewApp(ctx, nil)
 		if err != nil {
 			fmt.Println("error initializing app in firestore mode:", err)
 			os.Exit(1)

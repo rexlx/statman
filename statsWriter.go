@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/firestore"
+	"cloud.google.com/go/storage"
 )
 
 type StatsWriter struct {
@@ -70,28 +71,91 @@ func (f *FirestoreWriter) Setup(fname string, ifc interface{}) error {
 
 type InMemoryWriter struct {
 	Filename       string
+	IntervalStart  time.Time
 	Bucket         string
+	S3Client       *storage.Client
 	WriteFrequency time.Duration
+	KillChannel    chan interface{}
+	StatChannel    chan Stat
+	Stats          []Stat
+	Mem            *sync.RWMutex
 }
 
 type inMemoryWriterConfig struct {
 	Filename       string
 	Bucket         string
+	IntervalStart  time.Time
 	WriteFrequency time.Duration
+	S3Client       *storage.Client
 }
 
 func (i *InMemoryWriter) Write(stat ...Stat) (int, error) {
+	for _, s := range stat {
+		i.StatChannel <- s
+	}
 	return 0, nil
+}
+
+func (i *InMemoryWriter) RunInBG() {
+	for {
+		select {
+		case stat := <-i.StatChannel:
+			i.Mem.Lock()
+			i.Stats = append(i.Stats, stat)
+			i.Mem.Unlock()
+		case <-time.After(i.WriteFrequency):
+			i.Mem.RLock()
+			if len(i.Stats) == 0 {
+				fmt.Println("no stats to write")
+				i.Mem.RUnlock()
+				continue
+			}
+			i.Mem.RUnlock()
+			fmt.Println("writing to in-memory bucket")
+			i.Mem.Lock()
+			out, err := json.Marshal(i.Stats)
+			if err != nil {
+				fmt.Println(err, "error marshalling stats")
+				i.Mem.Unlock()
+				continue
+			}
+			i.Mem.Unlock()
+			objName := fmt.Sprintf("%v-%v.json", i.Filename, time.Now().Unix())
+			obj := i.S3Client.Bucket(i.Bucket).Object(objName).NewWriter(context.Background())
+			// if _, err := io.Copy(obj, bytes.NewReader(out)); err != nil {
+			// 	fmt.Println(err, "error writing to in-memory bucket")
+			// 	continue
+			// }
+			n, err := obj.Write(out)
+			if err != nil {
+				fmt.Println(err, "error writing to in-memory bucket", n)
+				continue
+			}
+			obj.Close()
+			// fmt.Println("wrote to in-memory bucket", i.Bucket, objName, n)
+			i.Stats = []Stat{}
+		case <-i.KillChannel:
+			fmt.Println("killing in-memory writer")
+			return
+		}
+	}
 }
 
 func (i *InMemoryWriter) Setup(fname string, ifc interface{}) error {
 	fmt.Println("running setup in in-memory mode")
+	killer := make(chan interface{})
+	i.StatChannel = make(chan Stat, 100)
+	i.Mem = &sync.RWMutex{}
 	switch ifc.(type) {
 	case inMemoryWriterConfig:
 		cfg := ifc.(inMemoryWriterConfig)
 		i.Filename = cfg.Filename
+		i.S3Client = cfg.S3Client
 		i.Bucket = cfg.Bucket
 		i.WriteFrequency = cfg.WriteFrequency
+		i.IntervalStart = time.Now()
+		i.KillChannel = killer
+		go i.RunInBG()
 		return nil
 	}
 	return fmt.Errorf("invalid type %T", ifc)
@@ -142,10 +206,17 @@ func NewStatsWriter(modes Modes, filename string, client *firestore.Client, hw H
 			return nil, err
 		}
 	case modes.InMemoryMode:
-		err := hw.Setup(fname, inMemoryWriterConfig{
+		fmt.Println("setting up in-memory writer")
+		ctx := context.Background()
+		client, err := storage.NewClient(ctx)
+		if err != nil {
+			return nil, err
+		}
+		err = hw.Setup(fname, inMemoryWriterConfig{
 			Filename:       fname,
-			Bucket:         "stats",
-			WriteFrequency: 5 * time.Second,
+			Bucket:         *bucket,
+			WriteFrequency: 300 * time.Second,
+			S3Client:       client,
 		})
 		if err != nil {
 			return nil, err
