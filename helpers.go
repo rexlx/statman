@@ -43,7 +43,7 @@ func (m *MainServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	m.Visits++
 	if !ok {
 		m.Logger.Println("creating new stats writer", bits[0])
-		svr, err := NewStatsWriter(m.NoDocker, fmt.Sprintf("%s.log", bits[0]), m.FSClient)
+		svr, err := NewStatsWriter(m.Modes, fmt.Sprintf("%s.log", bits[0]), m.FSClient, DetectMode(m.Modes))
 		if err != nil {
 			m.Logger.Println(err, "error creating stats writer")
 			http.Error(w, "error creating stats writer", http.StatusInternalServerError)
@@ -77,10 +77,6 @@ func (s *StatsWriter) WriteStatsToLogger() {
 			continue
 		}
 		s.Logger.Println(string(out))
-		if err != nil {
-			fmt.Println(err, "error writing stat", s.ID)
-			continue
-		}
 	}
 	s.Stats = []Stat{}
 }

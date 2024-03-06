@@ -12,13 +12,15 @@ import (
 
 	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
+	"google.golang.org/api/option"
 )
 
 var (
 	port          = flag.Int("port", 20080, "port to listen on")
 	noDocker      = flag.Bool("no-docker", false, "are we running in a container")
-	firestoreMode = flag.Bool("firestore", true, "use firestore")
+	firestoreMode = flag.Bool("firestore", false, "use firestore")
 	projectId     = flag.String("project", "tubular-monkey-514321", "project id")
+	inMemoryMode  = flag.Bool("in-memory", false, "use in-memory storage")
 )
 
 type MainServer struct {
@@ -36,6 +38,7 @@ type MainServer struct {
 type Modes struct {
 	NoDocker      bool
 	FirestoreMode bool
+	InMemoryMode  bool
 }
 
 func main() {
@@ -47,9 +50,12 @@ func main() {
 
 	if *firestoreMode {
 		ctx := context.Background()
-		fb, err := firebase.NewApp(ctx, nil)
+		cfg := &firebase.Config{ProjectID: *projectId}
+		sa := option.WithCredentialsFile("/Users/rxlx/bin/data/fbase.json")
+		fb, err := firebase.NewApp(ctx, cfg, sa)
+		// fb, err := firebase.NewApp(ctx, nil)
 		if err != nil {
-			fmt.Println("error initializing app:", err)
+			fmt.Println("error initializing app in firestore mode:", err)
 			os.Exit(1)
 		}
 
@@ -59,7 +65,6 @@ func main() {
 			os.Exit(1)
 		}
 		fmt.Println("Firestore connected")
-
 	}
 
 	app := &MainServer{
@@ -70,6 +75,7 @@ func main() {
 		Modes: Modes{
 			NoDocker:      *noDocker,
 			FirestoreMode: *firestoreMode,
+			InMemoryMode:  *inMemoryMode,
 		},
 	}
 
