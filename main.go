@@ -21,7 +21,7 @@ var (
 	inMemoryMode             = flag.Bool("in-memory", false, "use in-memory storage")
 	projectId                = flag.String("project", "tubular-monkey-514321", "project id")
 	bucket                   = flag.String("bucket", "nullferatu", "bucket name")
-	MemoryModeWriteFrequency = flag.Int("write-frequency", 5, "how often to write to memory")
+	memoryModeWriteFrequency = flag.Int("write-frequency", 5, "how often to write to memory")
 )
 
 type MainServer struct {

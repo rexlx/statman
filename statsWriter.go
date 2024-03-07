@@ -132,7 +132,7 @@ func (i *InMemoryWriter) RunInBG() {
 				continue
 			}
 			obj.Close()
-			// fmt.Println("wrote to in-memory bucket", i.Bucket, objName, n)
+			fmt.Println("wrote to in-memory bucket", i.Bucket, objName, n)
 			i.Stats = []Stat{}
 		case <-i.KillChannel:
 			fmt.Println("killing in-memory writer")
@@ -215,7 +215,7 @@ func NewStatsWriter(modes Modes, filename string, client *firestore.Client, hw H
 		err = hw.Setup(fname, inMemoryWriterConfig{
 			Filename:       fname,
 			Bucket:         *bucket,
-			WriteFrequency: 300 * time.Second,
+			WriteFrequency: time.Duration(*memoryModeWriteFrequency) * time.Second,
 			S3Client:       client,
 		})
 		if err != nil {
@@ -241,21 +241,13 @@ func NewStatsWriter(modes Modes, filename string, client *firestore.Client, hw H
 }
 
 func (s *StatsWriter) RootHandler(w http.ResponseWriter, r *http.Request) {
-
-	// log.Println("root handler", s.ID)
 	var in Stat
 	err := ReadJSON(w, r, &in)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	// s.AppendStats(in)
 
-	// out, err := json.Marshal(in)
-	// if err != nil {
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 	return
-	// }
 	s.Write(in)
 	s.RequestCount++
 	fmt.Fprintf(w, "OK\n")
